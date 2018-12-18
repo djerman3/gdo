@@ -11,3 +11,4 @@ main
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+gdo-api/token-authorizer/upload.log
