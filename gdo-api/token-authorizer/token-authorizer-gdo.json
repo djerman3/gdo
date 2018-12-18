@@ -1,0 +1,40 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "An example template with an IAM role for a Lambda state machine.",
+    "Resources": {
+        "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                }
+            }
+        },
+        "MyLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Handler": "gdo-token-authorizer",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaExecutionRole",
+                        "Arn"
+                    ]
+                },
+                "Code": {
+                    "ZipFile": "gdo-token-authorizer.zip"
+                },
+                "Runtime": "go-1.x",
+                "Timeout": "250"
+            }
+        }
+    }
+}
