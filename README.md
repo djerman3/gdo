@@ -1,10 +1,10 @@
 # gdo - garage door opener
 
-I'm learning AWS Lambda + API Gateway + authentication with this 
-homebrew garage door gateway.
+I'm writing 3 apps for a garage door opener. 
 
-The API is hosted in my AWS account, with a React frontend in a static S3 bucket.
+gd-api provides a RESTful interface over the door controls
+and sensors.
 
-My raspberry pi with its piFace cape will post the destination IP to the API as my home IP changes.
+gd-web provides an html report and click button
 
-The lambda functions will authenticate/authorize users and call server functions to get door state and usage statistics.
+gd-mobile if I get it working provides a mobile app experience
