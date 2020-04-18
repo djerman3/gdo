@@ -14,7 +14,7 @@ settings are required to set the hardware address.
 package piface
 
 //somehow I get
-//    	jerman.info/gdo/doorstate imports
+//    	github.com/djerman3/gdo/doorstate imports
 //       github.com/luismesas/goPi/piface: module github.com/luismesas/goPi@latest found (v1.0.2), but does not contain package github.com/luismesas/goPi/piface
 //  so I'm borrowinng it until I figure that out
 import (

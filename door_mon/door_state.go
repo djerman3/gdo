@@ -39,7 +39,7 @@ import (
 	"sync"
 	"time"
 
-	"jerman.info/gdo/doorstate/piface"
+	"github.com/djerman3/gdo/doorstate/piface"
 )
 
 // ScanSensor stores the sensor definition, current and previous scan states (if present)

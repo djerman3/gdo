@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/luismesas/goPi/spi"
-	"jerman.info/gdo/doorstate"
-	"jerman.info/gdo/doorstate/piface"
+	"github.com/djerman3/gdo/doorstate"
+	"github.com/djerman3/gdo/doorstate/piface"
 )
 
 func main() {
