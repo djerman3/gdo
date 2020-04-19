@@ -113,10 +113,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					"		<div class=\"jumbotron text-center\"><h1>Garage Door</h1>" +
 					"		<p>The door state is " + state + "</p></div>" +
 					"       <form action=\"/\" method=\"POST\">" +
-					"        <div class=\"row\"><div class=\"col-sm-4\">" +
+					"        <div class=\"row\"><div class=\"col-sm-2\">" +
 					"			<button class=\"btn btn-primary btn-lg btn-block\" type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
-					"        </div><div class=\"col-sm-4\">" +
-					"			<button class=\"btn btn-secondary btn-lg.btn-block\" type=\"reset\" formaction=\"/\" >RELOAD</button>" +
+					"        </div><div class=\"col-sm-2\">" +
+					"			<button class=\"btn btn-secondary btn-lg btn-block\" type=\"reset\" formaction=\"/\" >RELOAD</button>" +
 					"		</div></div>" +
 					"		</form>" +
 					"	</body>"))
