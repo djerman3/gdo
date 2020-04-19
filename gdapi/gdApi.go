@@ -87,13 +87,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"	</body>"))
 	case "POST":
 		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
 		err := s.DoClick()
 		if err != nil {
 			log.Println(err)
 		}
-		log.Printf("redirecting to %s\n", r.URL.Scheme+"//"+r.URL.Host+":"+r.URL.Port()+"/")
-		http.Redirect(w, r, r.URL.Scheme+"//"+r.URL.Host+":5000/", 301)
+		log.Printf("redirecting to %s\n", r.RequestURI+"//"+r.Host+":5000"+"/")
+		http.Redirect(w, r, r.URL.Scheme+"//"+r.Host+":5000/", 301)
 
 	}
 
