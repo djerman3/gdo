@@ -91,7 +91,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("<!doctype html> " +
 			"		<title>Garage Door</title>" +
 			"		<body>" +
-			"       <form action=\"/\" method=\"POST\">\" +input type='hidden' name='redirect_to' value='/' />"))
+			"       <form action=\"/\" method=\"POST\">\" +input type='hidden' name='redirect_to' value='/' />" +
+			"	</body>"))
 		err := s.DoClick()
 		if err != nil {
 			w.Write([]byte(`,"oops,error":"` + err.Error() + `"`))
