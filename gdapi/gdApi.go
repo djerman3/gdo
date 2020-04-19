@@ -49,12 +49,12 @@ func (s *Server) ReadPin() (string, error) {
 	s.piLock.Lock()
 	defer s.piLock.Unlock()
 	reply := "["
-	for _, v := range s.pins {
-		if len(reply) > 2 {
+	for i, v := range s.pins {
+		if len(reply) > 1 {
 			reply += ", "
 		}
 		value := s.rpi.InputPins[v].Value()
-		reply += fmt.Sprintf("%d", int(value))
+		reply += fmt.Sprintf("(%d:%d)", int(i), int(value))
 	}
 	reply += "]"
 	return reply, nil
@@ -76,6 +76,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write([]byte(
 			"<!doctype html> " +
+				"<meta http-equiv=\"refresh\" content=\"10\">" +
 				"		<title>Garage Door</title>" +
 				"		<body>" +
 				"		<h1>Garage Door</h1><p/>" +
