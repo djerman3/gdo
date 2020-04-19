@@ -92,7 +92,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 		log.Printf("redirecting to %s\n", r.RequestURI+"//"+r.Host+":5000"+"/")
-		http.Redirect(w, r, r.URL.Scheme+"//"+r.Host+":5000/", 301)
+		http.Redirect(w, r, "http://"+r.Host+"/", 301)
 
 	}
 
