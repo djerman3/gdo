@@ -50,7 +50,8 @@ func (s *Server) ReadPin() (string, error) {
 		if len(reply) > 2 {
 			reply += ", "
 		}
-		reply += fmt.Sprintf("%d", s.rpi.Relays[v].Value())
+		value := s.rpi.Relays[v].Value()
+		reply += fmt.Sprintf("%d", int(value))
 	}
 	reply += "]"
 	return reply, nil
