@@ -63,17 +63,26 @@ func (s *Server) ReadPin() (string, error) {
 
 // ServeHTTP implements the net/http Handler interface
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	//	w.Header().Set("Content-Type", "application/json")
+	//	w.WriteHeader(http.StatusOK)
 	switch r.Method {
 	case "GET":
-
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
 		state, err := s.ReadPin()
 		if err != nil {
 			state = fmt.Sprintf("%v", err)
 		}
-		w.Write([]byte(`{"message": "get called", "state":` + state + `}`))
+		w.Write([]byte(
+			"<!doctype html> " + "		<title>Garage Door</title>" + "		<body>" + "		<h1>Garage Door</h1><p/>" +
+				"		<h2>The door state is " + state + "</h2><p/>" +
+				"       <form action=\"/\" method=\"POST\">" +
+				"			<button type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
+				"			<button type=\"reset\" formaction=\"/\" >RELOAD</button>" +
+				"		</form>" +
+				"	</body>"))
 	case "POST":
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(`{"message": "post called"`))
 		err := s.DoClick()
