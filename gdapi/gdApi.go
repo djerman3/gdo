@@ -13,16 +13,21 @@ import (
 
 // Server is the handler struct, carries the pi and mutex
 type Server struct {
-	rpi    *piface.Digital
-	piLock sync.Mutex
-	pins   []byte
-	relay  byte
+	rpi                  *piface.Digital
+	piLock               sync.Mutex
+	pinClosed            byte
+	pinClosedAssertValue byte // add pinOpen assertions and "in motion" state if I ever get off my ass and install another switch
+	relay                byte
 }
+
+// sensor pins assert one of these positions with one of their values
+// when there's fewer pins than positions use induction, but assertions overrule
 
 // Init : don't forget to init once
 func (s *Server) Init() error {
 	// set scan pins
-	s.pins = []byte{0, 1, 2, 3, 4, 5, 6, 7}
+	s.pinClosed = 5            //"this pin asserts door closed state"
+	s.pinClosedAssertValue = 0 //"closed when zero"
 	s.relay = 0
 	// creates a new pifacedigital instance
 	if s.rpi == nil {
@@ -48,15 +53,12 @@ func (s *Server) DoClick() error {
 func (s *Server) ReadPin() (string, error) {
 	s.piLock.Lock()
 	defer s.piLock.Unlock()
-	reply := "["
-	for i, v := range s.pins {
-		if len(reply) > 1 {
-			reply += ", "
-		}
-		value := s.rpi.InputPins[v].Value()
-		reply += fmt.Sprintf("(%d:%d)", int(i), int(value))
+	reply := "Open"
+
+	if s.rpi.InputPins[s.pinClosed].Value() == s.pinClosedAssertValue {
+		reply = "Closed"
 	}
-	reply += "]"
+
 	return reply, nil
 }
 
@@ -92,7 +94,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		log.Printf("redirecting to %s\n", r.RequestURI+"//"+r.Host+":5000"+"/")
 		http.Redirect(w, r, "http://"+r.Host+"/", 301)
 
 	}
