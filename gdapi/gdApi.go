@@ -114,9 +114,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					"		<p>The door state is " + state + "</p></div>" +
 					"       <form action=\"/\" method=\"POST\">" +
 					"        <div class=\"row\"><div class=\"col-sm-4\">" +
-					"			<button type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
+					"			<button class=\"btn btn-primary btn-lg btn-block\" type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
 					"        </div><div class=\"col-sm-4\">" +
-					"			<button type=\"reset\" formaction=\"/\" >RELOAD</button>" +
+					"			<button class=\"btn btn-secondary btn-lg.btn-block\" type=\"reset\" formaction=\"/\" >RELOAD</button>" +
 					"		</div></div>" +
 					"		</form>" +
 					"	</body>"))
