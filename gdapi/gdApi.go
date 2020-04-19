@@ -74,7 +74,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			state = fmt.Sprintf("%v", err)
 		}
 		w.Write([]byte(
-			"<!doctype html> " + "		<title>Garage Door</title>" + "		<body>" + "		<h1>Garage Door</h1><p/>" +
+			"<!doctype html> " +
+				"		<title>Garage Door</title>" +
+				"		<body>" +
+				"		<h1>Garage Door</h1><p/>" +
 				"		<h2>The door state is " + state + "</h2><p/>" +
 				"       <form action=\"/\" method=\"POST\">" +
 				"			<button type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
@@ -84,10 +87,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"message": "post called"`))
+		w.Write([]byte(`<input type='hidden' name='redirect_to' value='/' />`))
 		err := s.DoClick()
 		if err != nil {
-			w.Write([]byte(`,"error":"` + err.Error() + `"`))
+			w.Write([]byte(`,"oops,error":"` + err.Error() + `"`))
 		}
 		w.Write([]byte(`}`))
 	}
