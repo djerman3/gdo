@@ -85,9 +85,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"		</form>" +
 				"	</body>"))
 	case "POST":
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`<input type='hidden' name='redirect_to' value='/' />`))
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+
+		w.Write([]byte("<!doctype html> " +
+			"		<title>Garage Door</title>" +
+			"		<body>" +
+			"       <form action=\"/\" method=\"POST\">\" +input type='hidden' name='redirect_to' value='/' />"))
 		err := s.DoClick()
 		if err != nil {
 			w.Write([]byte(`,"oops,error":"` + err.Error() + `"`))
