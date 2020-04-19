@@ -14,6 +14,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.printf("%s listening on 0:5000\n", os.Args[0])
+	log.Printf("%s listening on 0:5000\n", os.Args[0])
 	log.Fatalln(http.ListenAndServe("0.0.0.0:5000", s))
 }
