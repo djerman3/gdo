@@ -68,8 +68,10 @@ func (s *Server) ReadPin() (string, error) {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//	w.Header().Set("Content-Type", "application/json")
 	//	w.WriteHeader(http.StatusOK)
+	log.Printf("%#v\n", r)
 	switch r.Method {
 	case "GET":
+
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
 		state, err := s.ReadPin()
@@ -78,7 +80,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write([]byte(
 			"<!doctype html> " +
-				"<meta http-equiv=\"refresh\" content=\"10\">" +
+				"<meta http-equiv=\"refresh\" content=\"6\">" +
 				"		<title>Garage Door</title>" +
 				"		<body>" +
 				"		<h1>Garage Door</h1><p/>" +
