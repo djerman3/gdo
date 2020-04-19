@@ -90,10 +90,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		err := s.DoClick()
 		if err != nil {
-			w.Write([]byte(`,"oops,error":"` + err.Error() + `"`))
+			log.Println(err)
 		}
 		log.Printf("redirecting to %s\n", r.URL.Scheme+"//"+r.URL.Host+":"+r.URL.Port()+"/")
-		http.Redirect(w, r, r.URL.Scheme+"//"+r.URL.Host+":"+r.URL.Port()+"/", 301)
+		http.Redirect(w, r, r.URL.Scheme+"//"+r.URL.Host+":5000/", 301)
 
 	}
 
