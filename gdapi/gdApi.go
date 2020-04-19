@@ -1,6 +1,7 @@
 package gdapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -64,32 +65,62 @@ func (s *Server) ReadPin() (string, error) {
 
 //HTTP stuff
 
+type doorstate struct {
+	ID        string    `json:"id"`
+	State     string    `json:"state"`
+	StateTime time.Time `json:"stateTime"`
+}
+
 // ServeHTTP implements the net/http Handler interface
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//	w.Header().Set("Content-Type", "application/json")
 	//	w.WriteHeader(http.StatusOK)
-	log.Printf("%#v\n", r)
+	accept := r.Header.Get("Accept")
+	log.Printf("%#v\n", accept)
 	switch r.Method {
 	case "GET":
-
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
 		state, err := s.ReadPin()
 		if err != nil {
 			state = fmt.Sprintf("%v", err)
 		}
-		w.Write([]byte(
-			"<!doctype html> " +
-				"<meta http-equiv=\"refresh\" content=\"6\">" +
-				"		<title>Garage Door</title>" +
-				"		<body>" +
-				"		<h1>Garage Door</h1><p/>" +
-				"		<h2>The door state is " + state + "</h2><p/>" +
-				"       <form action=\"/\" method=\"POST\">" +
-				"			<button type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
-				"			<button type=\"reset\" formaction=\"/\" >RELOAD</button>" +
-				"		</form>" +
-				"	</body>"))
+		if accept == "application/json" {
+			//render json
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			ds := doorstate{ID: "Our door", State: state, StateTime: time.Now()}
+			reply, err := json.MarshalIndent(&ds, "", "    ")
+			if err != nil {
+				reply = []byte(`{"error":"state marshal error"}`)
+			}
+			w.Write(reply)
+
+		} else {
+			//render html
+			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(
+				"<!doctype html> " + "<head>" +
+					"<meta charset=\"utf-8\">" +
+					"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
+					"<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css\">" +
+					"<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>" +
+					"<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js\"></script>" +
+					"<meta http-equiv=\"refresh\" content=\"6\">" +
+					"		<title>Garage Door</title>" +
+					"</head>" +
+					"		<body>" +
+					"		<div class=\"jumbotron text-center\"><h1>Garage Door</h1>" +
+					"		<p>The door state is " + state + "</p></div>" +
+					"       <form action=\"/\" method=\"POST\">" +
+					"        <div class=\"row\"><div class=\"col-sm-4\">" +
+					"			<button type=\"submit\" formaction=\"/\" autofocus=\"autofocus\">CLICK</button>" +
+					"        </div><div class=\"col-sm-4\">" +
+					"			<button type=\"reset\" formaction=\"/\" >RELOAD</button>" +
+					"		</div></div>" +
+					"		</form>" +
+					"	</body>"))
+		}
 	case "POST":
 		w.Header().Set("Content-Type", "text/html")
 		err := s.DoClick()
