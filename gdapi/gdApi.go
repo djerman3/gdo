@@ -65,10 +65,9 @@ func (s *Server) ReadPin() (string, error) {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case "GET":
-		w.WriteHeader(http.StatusOK)
+
 		state, err := s.ReadPin()
 		if err != nil {
 			state = fmt.Sprintf("%v", err)
@@ -76,11 +75,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message": "get called", "state":` + state + `}`))
 	case "POST":
 		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"message": "post called"`))
 		err := s.DoClick()
 		if err != nil {
-			w.Write([]byte(`{"error":"` + err + `"}`))
+			w.Write([]byte(`,"error":"` + err.Error() + `"`))
 		}
-		w.Write([]byte(`{"message": "post called"}`))
+		w.Write([]byte(`}`))
 	}
 
 }
