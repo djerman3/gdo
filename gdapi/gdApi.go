@@ -15,12 +15,14 @@ type Server struct {
 	rpi    *piface.Digital
 	piLock sync.Mutex
 	pins   []byte
+	relay  byte
 }
 
 // Init : don't forget to init once
 func (s *Server) Init() error {
 	// set scan pins
 	s.pins = []byte{0, 1, 2, 3, 4, 5, 6, 7}
+	s.relay = 0
 	// creates a new pifacedigital instance
 	if s.rpi == nil {
 		s.rpi = piface.NewDigital(spi.DEFAULT_HARDWARE_ADDR, spi.DEFAULT_BUS, spi.DEFAULT_CHIP)
@@ -35,9 +37,9 @@ func (s *Server) Init() error {
 func (s *Server) DoClick() error {
 	s.piLock.Lock()
 	defer s.piLock.Unlock()
-	s.rpi.Relays[0].Toggle()
+	s.rpi.Relays[s.relay].Toggle()
 	time.Sleep(300 * time.Millisecond)
-	s.rpi.Relays[0].Toggle()
+	s.rpi.Relays[s.relay].Toggle()
 	return nil
 }
 
@@ -74,6 +76,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message": "get called", "state":` + state + `}`))
 	case "POST":
 		w.WriteHeader(http.StatusCreated)
+		err := s.DoClick()
+		if err != nil {
+			w.Write([]byte(`{"error":"` + err + `"}`))
+		}
 		w.Write([]byte(`{"message": "post called"}`))
 	}
 
