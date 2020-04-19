@@ -2,6 +2,7 @@ package gdapi
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -91,7 +92,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte(`,"oops,error":"` + err.Error() + `"`))
 		}
-		http.Redirect(w, r, "/", 301)
+		log.Printf("redirecting to %s\n", r.URL.Scheme+"//"+r.URL.Host+":"+r.URL.Port()+"/")
+		http.Redirect(w, r, r.URL.Scheme+"//"+r.URL.Host+":"+r.URL.Port()+"/", 301)
 
 	}
 
