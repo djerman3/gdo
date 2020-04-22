@@ -16,20 +16,34 @@ import (
 type Server struct {
 	rpi                  *piface.Digital
 	piLock               sync.Mutex
-	pinClosed            byte
-	pinClosedAssertValue byte // add pinOpen assertions and "in motion" state if I ever get off my ass and install another switch
-	relay                byte
+	PinClosed            byte   `json:"pinClosed"`
+	PinClosedAssertValue byte   `json:"pinClosedAssertValue"` // add pinOpen assertions and "in motion" state if I ever get off my ass and install another switch
+	Relay                byte   `json:"controlRelay"`
+	Port                 int    `json:"port,omitempty"`
+	Address              string `json:"address,omitempty"`
+	Host                 string `json:"host,omitempty"`
 }
 
 // sensor pins assert one of these positions with one of their values
 // when there's fewer pins than positions use induction, but assertions overrule
 
 // Init : don't forget to init once
-func (s *Server) Init() error {
+func (s *Server) Init(host *string, addr *string, port *int) error {
+	// set web stuff
+	if port != nil {
+		s.Port = *port
+	}
+	if host != nil {
+		s.Host = *host
+	}
+	if addr != nil {
+		s.Address = *addr
+	}
+
 	// set scan pins
-	s.pinClosed = 5            //"this pin asserts door closed state"
-	s.pinClosedAssertValue = 0 //"closed when zero"
-	s.relay = 0
+	s.PinClosed = 5            //"this pin asserts door closed state"
+	s.PinClosedAssertValue = 0 //"closed when zero"
+	s.Relay = 0
 	// creates a new pifacedigital instance
 	if s.rpi == nil {
 		s.rpi = piface.NewDigital(spi.DEFAULT_HARDWARE_ADDR, spi.DEFAULT_BUS, spi.DEFAULT_CHIP)
@@ -37,38 +51,72 @@ func (s *Server) Init() error {
 			return fmt.Errorf("error on new rpi interface")
 		}
 	}
-	return s.rpi.InitBoard()
-}
-
-//DoClick emulates a button click by cycling the relay 0.3 seconds
-func (s *Server) DoClick() error {
-	s.piLock.Lock()
-	defer s.piLock.Unlock()
-	s.rpi.Relays[s.relay].Toggle()
-	time.Sleep(300 * time.Millisecond)
-	s.rpi.Relays[s.relay].Toggle()
+	err := s.rpi.InitBoard()
+	if err != nil {
+		s.rpi = nil //dereference and carry on, server will be in test mode
+		return fmt.Errorf("Server Warning TEST MODE ENTERED:%v", err)
+	}
 	return nil
 }
 
-//ReadPin emulates a button click by cycling the relay 0.3 seconds
-func (s *Server) ReadPin() (string, error) {
+//DoClick emulates a button click by cycling the Relay 0.3 seconds
+func (s *Server) DoClick() error {
 	s.piLock.Lock()
 	defer s.piLock.Unlock()
-	reply := "Open"
+	// guard
+	if s.rpi != nil {
+		s.rpi.Relays[s.Relay].Toggle()
+		time.Sleep(300 * time.Millisecond)
+		s.rpi.Relays[s.Relay].Toggle()
+	} else {
+		// do test mode
+		log.Println("Test Mode: Click!")
+	}
+	return nil
+}
 
-	if s.rpi.InputPins[s.pinClosed].Value() == s.pinClosedAssertValue {
-		reply = "Closed"
+//ReadPin emulates a button click by cycling the Relay 0.3 seconds
+func (s *Server) readPin() (string, bool, error) {
+	s.piLock.Lock()
+	defer s.piLock.Unlock()
+	// inferred value
+	reply := "Open"
+	a := false
+	if s.rpi != nil {
+		if s.rpi.InputPins[s.PinClosed].Value() == s.PinClosedAssertValue {
+			// positive assertion
+			reply = "Closed"
+			a = true
+		}
+	} else {
+		// do test mode
+		log.Println("Test Mode: Read Open!")
 	}
 
-	return reply, nil
+	return reply, a, nil
 }
 
 //HTTP stuff
 
-type doorstate struct {
+//DoorState represents a snapshot of the garage door's status.  States are asserted or implied by sensors.
+type DoorState struct {
 	ID        string    `json:"id"`
 	State     string    `json:"state"`
 	StateTime time.Time `json:"stateTime"`
+	Asserted  bool      `json:"asserted,omitempty"`
+	Error     string    `json:"error,omitempty"`
+}
+
+//GetDoorState returns the state of the door
+func (s *Server) GetDoorState() (DoorState, error) {
+	ds := DoorState{ID: "Our door", StateTime: time.Now()}
+	state, asserted, err := s.readPin()
+	if err != nil {
+		state = fmt.Sprintf("%v", err)
+	}
+	ds.State = state
+	ds.Asserted = asserted
+	return ds, err
 }
 
 // ServeHTTP implements the net/http Handler interface
@@ -77,20 +125,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//	w.WriteHeader(http.StatusOK)
 	accept := r.Header.Get("Accept")
 	log.Printf("%#v\n", accept)
+	// need this ds for all renderings
+	ds, err := s.GetDoorState() // error included in struct
+	if err != nil {
+		ds.Error = err.Error()
+	}
 	switch r.Method {
 	case "GET":
-		state, err := s.ReadPin()
-		if err != nil {
-			state = fmt.Sprintf("%v", err)
-		}
 		if accept == "application/json" {
 			//render json
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			ds := doorstate{ID: "Our door", State: state, StateTime: time.Now()}
 			reply, err := json.MarshalIndent(&ds, "", "    ")
 			if err != nil {
-				reply = []byte(`{"error":"state marshal error"}`)
+				reply = []byte("{\"error\":" + err.Error() + "}")
 			}
 			w.Write(reply)
 
@@ -111,7 +159,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					"</head>" +
 					"		<body>" +
 					"		<div class=\"jumbotron text-center\"><h1>Garage Door</h1>" +
-					"		<p>The door state is " + state + "</p></div>" +
+					"		<p>At " + ds.StateTime.Format("Jan 2 2006 15:04:05") + "</p>" +
+					"       <p>The door state is " + ds.State + "</p></div>" +
 					"       <form action=\"/\" method=\"POST\">" +
 					"		 <div class=\"container\">" +
 					"        <div class=\"row\"><div class=\"col-6\">" +
