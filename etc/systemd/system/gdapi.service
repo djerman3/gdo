@@ -3,17 +3,16 @@ Description=GDO Homemade garage door API server
 After=network.target auditd.service
 
 [Service]
-EnvironmentFile=-/etc/default/gdapi
-ExecStart=/home/djerman/sbin/gdapi -D $SSHD_OPTS
-ExecReload=/bin/kill $MAINPID
-ExecReload=/home/djerman/sbin/gdapi -D $SSHD_OPTS
+ExecStart=/home/djerman/sbin/gdapi 
 KillMode=process
 Restart=on-failure
 RestartPreventExitStatus=255
-Type=notify
-RuntimeDirectory=sshd
+Type=simple
+RuntimeDirectory=gdapi
 RuntimeDirectoryMode=0755
 
 [Install]
 WantedBy=multi-user.target
 Alias=gdapi.service
+
+
