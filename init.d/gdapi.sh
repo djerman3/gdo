@@ -85,7 +85,7 @@ case "$1" in
 #	check_for_no_start
 #	check_dev_nulls
 	log_daemon_msg "Starting gdapi server" "$GDAPI_CMD" || true
-	if start-stop-daemon --start --quiet --oknodo --chuid 0:0 --pidfile /run/sshd.pid --exec /usr/sbin/sshd -- $SSHD_OPTS; then
+	if start-stop-daemon --start --quiet --oknodo --chuid 0:0 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD -- $GDAPI_OPTS; then
 	    log_end_msg 0 || true
 	else
 	    log_end_msg 1 || true
@@ -118,7 +118,7 @@ case "$1" in
 	start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD;
 	check_for_no_start log_end_msg
 	check_dev_null log_end_msg
-	if start-stop-daemon --start --quiet --oknodo --chuid 0:0 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD; -- $GDAPI_OPTS; then
+	if start-stop-daemon --start --quiet --oknodo --chuid 0:0 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD -- $GDAPI_OPTS; then
 	    log_end_msg 0 || true
 	else
 	    log_end_msg 1 || true
@@ -130,13 +130,13 @@ case "$1" in
 	check_config
 	log_daemon_msg "Restarting OpenBSD Secure Shell server" "sshd" || true
 	RET=0
-	start-stop-daemon --stop --quiet --retry 30 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD; || RET="$?"
+	start-stop-daemon --stop --quiet --retry 30 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD || RET="$?"
 	case $RET in
 	    0)
 		# old daemon stopped
 		check_for_no_start log_end_msg
 		check_dev_null log_end_msg
-		if start-stop-daemon --start --quiet --oknodo --chuid 0:0 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD; -- $GDAPI_OPTS; then
+		if start-stop-daemon --start --quiet --oknodo --chuid 0:0 --pidfile /run/$GDAPI_CMD.pid --exec $GDAPI_PATH/$GDAPI_CMD -- $GDAPI_OPTS; then
 		    log_end_msg 0 || true
 		else
 		    log_end_msg 1 || true
