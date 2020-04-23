@@ -38,7 +38,7 @@ run_by_init() {
     ([ "$previous" ] && [ "$runlevel" ]) || [ "$runlevel" = S ]
 }
 
-check_for_no_start() {
+#check_for_no_start() {
     # forget it if we're trying to start, and /etc/ssh/sshd_not_to_be_run exists
     # if [ -e /etc/ssh/sshd_not_to_be_run ]; then 
 	# if [ "$1" = log_end_msg ]; then
@@ -49,7 +49,7 @@ check_for_no_start() {
 	# fi
 	# exit 0
     # fi
-}
+#}
 
 check_dev_null() {
     if [ ! -c /dev/null ]; then
@@ -63,19 +63,19 @@ check_dev_null() {
     fi
 }
 
-check_privsep_dir() {
+#check_privsep_dir() {
     # Create the PrivSep empty dir if necessary
     # if [ ! -d /run/sshd ]; then
 	# mkdir /run/sshd
 	# chmod 0755 /run/sshd
     # fi
-}
+#}
 
-check_config() {
+#check_config() {
     # if [ ! -e /etc/ssh/sshd_not_to_be_run ]; then
 	# /usr/sbin/sshd $SSHD_OPTS -t || exit 1
     # fi
-}
+#}
 
 export PATH="${PATH:+$PATH:}$GDAPI_PATH"
 
