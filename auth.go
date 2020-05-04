@@ -56,6 +56,7 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	return state
 }
 
+//GoogleUserProfile catches user data
 type GoogleUserProfile struct {
 	Email    string `json:"email"`
 	Verified bool   `json:"verified_email"`
