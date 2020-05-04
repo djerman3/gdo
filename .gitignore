@@ -15,3 +15,6 @@ gdo-api/token-authorizer/upload.log
 BitsAndBobs/door_mon/door_state.go
 BitsAndBobs/door_mon/go.sum
 BitsAndBobs/door_mon/cmd/main.go
+gdapi/lftp_transcript_redacted.txt
+etc/gdapi.conf.json
+etc/gdapi.conf.yaml

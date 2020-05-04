@@ -15,6 +15,7 @@ import (
 // Server is the handler struct, carries the pi and mutex
 type Server struct {
 	rpi                  *piface.Digital
+	testmode             bool
 	piLock               sync.Mutex
 	PinClosed            byte   `json:"pinClosed"`
 	PinClosedAssertValue byte   `json:"pinClosedAssertValue"` // add pinOpen assertions and "in motion" state if I ever get off my ass and install another switch
@@ -27,8 +28,47 @@ type Server struct {
 // sensor pins assert one of these positions with one of their values
 // when there's fewer pins than positions use induction, but assertions overrule
 
+//TestModeError is an error to distinguish test mode, with a bool
+// to indicate that test mode was requested (and the pi disabled on purpose)
+// vs test mode fallback (Testmode = false) indicating the pi was not
+// found/available
+type TestModeError struct {
+	err error
+}
+
+func (t *TestModeError) Error() string {
+	return t.err.Error()
+}
+
+func (s *Server) initPi() error {
+
+	if s.testmode {
+		s.rpi = nil //force no pi
+		return nil
+	}
+	if s.rpi == nil {
+		s.rpi = piface.NewDigital(spi.DEFAULT_HARDWARE_ADDR, spi.DEFAULT_BUS, spi.DEFAULT_CHIP)
+		if s.rpi == nil {
+			err := fmt.Errorf("error on new rpi interface")
+			t := TestModeError{
+				err: err,
+			}
+			return &t
+		}
+	}
+	err := s.rpi.InitBoard()
+	if err != nil {
+		t := TestModeError{
+			err: err,
+		}
+		s.rpi = nil //dereference and carry on, server will be in test mode
+		return &t
+	}
+	return nil
+}
+
 // Init : don't forget to init once
-func (s *Server) Init(host *string, addr *string, port *int) error {
+func (s *Server) Init(host *string, addr *string, port *int, testmode *bool) error {
 	// set web stuff
 	if port != nil {
 		s.Port = *port
@@ -39,24 +79,22 @@ func (s *Server) Init(host *string, addr *string, port *int) error {
 	if addr != nil {
 		s.Address = *addr
 	}
-
+	if testmode != nil {
+		s.testmode = *testmode
+	}
 	// set scan pins
 	s.PinClosed = 5            //"this pin asserts door closed state"
 	s.PinClosedAssertValue = 0 //"closed when zero"
 	s.Relay = 0
 	// creates a new pifacedigital instance
-	if s.rpi == nil {
-		s.rpi = piface.NewDigital(spi.DEFAULT_HARDWARE_ADDR, spi.DEFAULT_BUS, spi.DEFAULT_CHIP)
-		if s.rpi == nil {
-			return fmt.Errorf("error on new rpi interface")
+	err := s.initPi()
+	if err != nil {
+		if err, ok := err.(*TestModeError); ok {
+			s.testmode = true
+			return err
 		}
 	}
-	err := s.rpi.InitBoard()
-	if err != nil {
-		s.rpi = nil //dereference and carry on, server will be in test mode
-		return fmt.Errorf("Server Warning TEST MODE ENTERED:%v", err)
-	}
-	return nil
+	return err
 }
 
 //DoClick emulates a button click by cycling the Relay 0.3 seconds
