@@ -26,9 +26,14 @@ type gdoDoor struct {
 	Relay                int
 	Cmd                  map[string]string
 	Client               *http.Client
+	Testing              bool
 }
 
 func (d *gdoDoor) getJSON(url string, target interface{}) error {
+	if d.Testing {
+		// disable call effects for test mode
+		return nil
+	}
 	r, err := d.Client.Get(url)
 	if err != nil {
 		return err

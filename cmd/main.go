@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
@@ -10,12 +9,18 @@ import (
 )
 
 func main() {
-	configfile := flag.String("config", "/etc/gdo/gdo.conf", "ets the config file path for secrets and ports and things.")
-	testmode := flag.Bool("test", false, "Toggles true for test mode operation, where no PI controls actually work.")
+	var configfile string
+	var testmode bool
+	flag.StringVar(&configfile, "config", "/etc/gdo/gdo.conf", "Sets the config file path for secrets and ports and things.")
+	flag.BoolVar(&testmode, "test", false, "Toggles true for test mode operation, where no PI controls actually work.")
 	flag.Parse()
 
-	cfg, err := gdo.NewConfig(*configfile)
-	cfg.Testing = *testmode
+	cfg, err := gdo.NewConfig(configfile)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	cfg.Testing = testmode
 	if err != nil {
 		log.Println(err)
 		return
@@ -25,6 +30,6 @@ func main() {
 		log.Println(err)
 		return
 	}
-	log.Printf("%s listening on "+cfg.Server.Addr+":"+fmt.Sprintf("%d", cfg.Server.Port)+"\n", os.Args[0])
+	log.Printf("%s starting\n", os.Args[0])
 	log.Fatalln(s.ListenAndServe())
 }

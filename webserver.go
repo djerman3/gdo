@@ -32,6 +32,7 @@ type Webserver struct {
 	tlsSrv   *http.Server
 	srv      *http.Server
 	cachedir string
+	Testing  bool
 }
 
 //NewWebserver gets a server ready to go
@@ -41,6 +42,7 @@ func NewWebserver(cfg *Config) (srv *Webserver, err error) {
 		door = &gdoDoor{}
 		door.Init(cfg)
 	}
+
 	// prepare google oauth2
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  cfg.Oauth2.Redirect,
@@ -52,12 +54,12 @@ func NewWebserver(cfg *Config) (srv *Webserver, err error) {
 	// prepare router
 	r := newRouter()
 	// allocate server
-	s := &Webserver{cachedir: cfg.Server.Cachedir}
+	s := &Webserver{cachedir: cfg.Server.Cachedir, Testing: cfg.Testing}
 	var m *autocert.Manager
 	if cfg.Testing {
 		s.srv = &http.Server{
 			Handler:        r,
-			Addr:           fmt.Sprintf("%s:%d", cfg.Server.Addr, cfg.Server.Port),
+			Addr:           fmt.Sprintf("%s:%d", cfg.Server.Addr, 8050),
 			ReadTimeout:    time.Duration(cfg.Server.Timeout.Read) * time.Second,
 			WriteTimeout:   time.Duration(cfg.Server.Timeout.Write) * time.Second,
 			IdleTimeout:    time.Duration(cfg.Server.Timeout.Idle) * time.Second,
@@ -102,12 +104,15 @@ func NewWebserver(cfg *Config) (srv *Webserver, err error) {
 func (s *Webserver) ListenAndServe() error {
 	if s.tlsSrv != nil {
 		go func() {
+			log.Printf("listening TLS on %s\n", s.tlsSrv.Addr)
 			err := s.tlsSrv.ListenAndServeTLS("", "")
 			if err != nil {
 				log.Fatalf("httpsSrv.ListendAndServeTLS() failed with %s", err)
 			}
 		}()
 	}
+	log.Printf("listening HTTP on %s\n", s.srv.Addr)
+
 	return s.srv.ListenAndServe()
 }
 
