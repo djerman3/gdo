@@ -1,0 +1,31 @@
+# Yaml for config file, 'cause you can has comments
+#
+# If the name of this file ends with .clean it's got no secrets.  Otherwise it should be on .gitignore
+oauth2:
+  clientSecret: ......
+  clientID: .......
+  appName: gdo-server-v2
+  redirect: ....
+  scopes: [ https://www.googleapis.com/auth/userinfo.email ]
+  access: 
+   - email: ..
+   - googleId: ....
+   - email: ..
+   - googleId: ....
+
+webserver:
+  host: ....
+  port: 80
+  tlsPort: 443
+  addr: 
+  addr6: \[::]
+  cachedir: ...
+  timeout:
+      server: 60
+      write: 20
+      read: 20
+      idle: 20
+door:
+  closedPin: 5
+  closedValue: 0
+  clickRelay: 0
