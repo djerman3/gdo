@@ -4,7 +4,6 @@ package gdo
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"fmt"
 	"html/template"
@@ -16,7 +15,6 @@ import (
 	"github.com/djerman3/gdo/staticdata"
 	"github.com/gorilla/mux"
 
-	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -29,10 +27,9 @@ var (
 
 // Webserver is the target object for webserver functions
 type Webserver struct {
-	tlsSrv   *http.Server
-	srv      *http.Server
-	cachedir string
-	Testing  bool
+	tlsSrv  *http.Server
+	srv     *http.Server
+	Testing bool
 }
 
 //NewWebserver gets a server ready to go
@@ -54,9 +51,8 @@ func NewWebserver(cfg *Config) (srv *Webserver, err error) {
 	// prepare router
 	r := newRouter()
 	// allocate server
-	s := &Webserver{cachedir: cfg.Server.Cachedir, Testing: cfg.Testing}
-	var m *autocert.Manager
-	if cfg.Testing {
+	s := &Webserver{Testing: cfg.Testing}
+	if false { //cfg.Testing {
 		s.srv = &http.Server{
 			Handler:        r,
 			Addr:           fmt.Sprintf("%s:%d", cfg.Server.Addr, 8050),
@@ -66,31 +62,28 @@ func NewWebserver(cfg *Config) (srv *Webserver, err error) {
 			MaxHeaderBytes: 1 << 20,
 		}
 	} else {
-		hostPolicy := func(ctx context.Context, host string) error {
-			// Note: change to your real domain
-			allowedHost := cfg.Server.Host
-			if host == allowedHost {
-				return nil
-			}
-			return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
+		cer, err := tls.LoadX509KeyPair(cfg.Server.TLS.CertFile, cfg.Server.TLS.KeyFile)
+		if err != nil {
+			log.Println(err)
+			return nil, err
 		}
-		m = &autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			HostPolicy: hostPolicy,
-			Cache:      autocert.DirCache(s.cachedir),
-		}
+
+		tc := &tls.Config{Certificates: []tls.Certificate{cer}}
+
 		s.tlsSrv = &http.Server{
+			TLSConfig:      tc,
 			Handler:        r,
-			Addr:           ":443", // fmt.Sprintf("%s:%d", cfg.Server.Addr, cfg.Server.TLSPort),
+			Addr:           cfg.Server.TLSAddr,
 			ReadTimeout:    time.Duration(cfg.Server.Timeout.Read) * time.Second,
 			WriteTimeout:   time.Duration(cfg.Server.Timeout.Write) * time.Second,
 			IdleTimeout:    time.Duration(cfg.Server.Timeout.Idle) * time.Second,
 			MaxHeaderBytes: 1 << 20,
 		}
-		s.tlsSrv.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+		m := mux.NewRouter()
+		m.HandleFunc("/", redirectToHTTPS)
 		s.srv = &http.Server{
-			Handler:        m.HTTPHandler(r),
-			Addr:           ":80", //fmt.Sprintf("%s:%d", cfg.Server.Addr, cfg.Server.Port),
+			Handler:        m,
+			Addr:           cfg.Server.Addr,
 			ReadTimeout:    time.Duration(cfg.Server.Timeout.Read) * time.Second,
 			WriteTimeout:   time.Duration(cfg.Server.Timeout.Write) * time.Second,
 			IdleTimeout:    time.Duration(cfg.Server.Timeout.Idle) * time.Second,
@@ -98,6 +91,18 @@ func NewWebserver(cfg *Config) (srv *Webserver, err error) {
 		}
 	}
 	return s, nil
+}
+
+func redirectToHTTPS(w http.ResponseWriter, req *http.Request) {
+	// remove/add not default ports from req.Host
+	target := "https://" + req.Host + req.URL.Path
+	if len(req.URL.RawQuery) > 0 {
+		target += "?" + req.URL.RawQuery
+	}
+	log.Printf("redirect to: %s", target)
+	http.Redirect(w, req, target,
+		// see comments below and consider the codes 308, 302, or 301
+		http.StatusTemporaryRedirect)
 }
 
 //ListenAndServe to implement http.Server

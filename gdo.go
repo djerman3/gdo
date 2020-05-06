@@ -35,13 +35,14 @@ type Timeout struct {
 
 // WebserverCfg captures webserver configs
 type WebserverCfg struct {
-	Host     string  `yaml:"host"`
-	Port     int     `yaml:"port"`
-	TLSPort  int     `yaml:"tlsPort"`
-	Addr     string  `yaml:"addr"`
-	Addr6    string  `yaml:"addr6"`
-	Cachedir string  `yaml:"cachedir"`
-	Timeout  Timeout `yaml:"timeout"`
+	Host string `yaml:"host"`
+	TLS  struct {
+		CertFile string `yaml:"cert"`
+		KeyFile  string `yaml:"key"`
+	} `yaml:"tls"`
+	Addr    string  `yaml:"addr"`
+	TLSAddr string  `yaml:"tlsAddr"`
+	Timeout Timeout `yaml:"timeout"`
 }
 
 //AccessEntry populates the access array and allow google id holders to run the services

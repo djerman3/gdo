@@ -15,11 +15,12 @@ oauth2:
 
 webserver:
   host: ....
-  port: 80
-  tlsPort: 443
   addr: 
   addr6: \[::]
-  cachedir: ...
+  tls:
+    key:/etc/letsencrypt/live/jerman.info/privkey.pem
+    cert:/etc/letsencrypt/live/jerman.info/fullchain.pem
+
   timeout:
       server: 60
       write: 20

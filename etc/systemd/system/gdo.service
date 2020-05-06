@@ -1,18 +1,16 @@
 [Unit]
 Description=GDO Homemade garage door API server
-After=network.target auditd.service
+After=network.target auditd.service pimonitor.service
 
 [Service]
-ExecStart=/home/djerman/sbin/gdapi 
+ExecStart=/usr/local/bin/gdo
 KillMode=process
 Restart=on-failure
 RestartPreventExitStatus=255
 Type=simple
-RuntimeDirectory=gdapi
-RuntimeDirectoryMode=0755
 
 [Install]
 WantedBy=multi-user.target
-Alias=gdapi.service
+
 
 
