@@ -3,13 +3,12 @@
 package gdo
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
-	"sync"
+	"net/http"
 	"time"
 
-	"github.com/djerman3/gdo/piface"
-	"github.com/luismesas/GoPi/spi"
+	"github.com/djerman3/pimonitor"
 )
 
 //DoorState is the exposed door data, serializable
@@ -21,28 +20,22 @@ type DoorState struct {
 	Error     string    `json:"error,omitempty"`
 }
 type gdoDoor struct {
-	rpi                  *piface.Digital
+	Addr                 string
 	PinClosed            int
-	PinClosedAssertValue int
+	PinClosedAssertValue bool
 	Relay                int
-	piLock               sync.Mutex
+	Cmd                  map[string]string
+	Client               *http.Client
 }
 
-func (d *gdoDoor) initPi() error {
-
-	if d.rpi == nil {
-		d.rpi = piface.NewDigital(spi.DEFAULT_HARDWARE_ADDR, spi.DEFAULT_BUS, spi.DEFAULT_CHIP)
-		if d.rpi == nil {
-			err := fmt.Errorf("error on new rpi interface")
-			return err
-		}
-	}
-	err := d.rpi.InitBoard()
+func (d *gdoDoor) getJSON(url string, target interface{}) error {
+	r, err := d.Client.Get(url)
 	if err != nil {
-		d.rpi = nil //dereference and carry on, server will be in test mode
 		return err
 	}
-	return nil
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(target)
 }
 
 // Init : don't forget to init once
@@ -52,45 +45,44 @@ func (d *gdoDoor) Init(cfg *Config) error {
 	d.PinClosedAssertValue = cfg.Door.ClosedValue //"closed when zero"
 	d.Relay = cfg.Door.ClickRelay
 	// creates a new pifacedigital instance
-	err := d.initPi()
-	if err != nil {
-		return err
+	d.Addr = cfg.Door.PiMonitorAddress
+	d.Cmd = map[string]string{
+		"click": fmt.Sprintf("http://%s/relay/%d/click", d.Addr, d.Relay),
+		"read":  fmt.Sprintf("http://%s/input/%d/value", d.Addr, d.PinClosed),
 	}
+	d.Client = &http.Client{Timeout: 8 * time.Second}
 	return nil
 }
 
 //DoClick emulates a button click by cycling the Relay 0.3 seconds
 func (d *gdoDoor) DoClick() error {
-	d.piLock.Lock()
-	defer d.piLock.Unlock()
-	// guard
-	if d.rpi != nil {
-		d.rpi.Relays[d.Relay].Toggle()
-		time.Sleep(300 * time.Millisecond)
-		d.rpi.Relays[d.Relay].Toggle()
-	} else {
-		// do test mode
-		log.Println("Test Mode: Click!")
+	r := pimonitor.BoolValueResponse{}
+	err := d.getJSON(d.Cmd["click"], &r)
+	if err != nil {
+		return err
+	}
+	if r.Error != "" {
+		return fmt.Errorf("click Failed:%s", r.Error)
 	}
 	return nil
 }
 
 //ReadPin emulates a button click by cycling the Relay 0.3 seconds
-func (d *gdoDoor) readPin() (string, bool, error) {
-	d.piLock.Lock()
-	defer d.piLock.Unlock()
+func (d *gdoDoor) ReadPin() (string, bool, error) {
+	r := pimonitor.BoolValueResponse{}
+	err := d.getJSON(d.Cmd["read"], &r)
+	if err != nil {
+		return "", false, err
+	}
+	if r.Error != "" {
+		return "", false, fmt.Errorf("click Failed:%s", r.Error)
+	}
 	// inferred value
 	reply := "Open"
-	a := false
-	if d.rpi != nil {
-		if d.rpi.InputPins[d.PinClosed].Value() == byte(d.PinClosedAssertValue) {
-			// positive assertion
-			reply = "Closed"
-			a = true
-		}
-	} else {
-		// do test mode
-		log.Println("Test Mode: Read Open!")
+	// or do we assert "closed?"
+	a := (r.Value == d.PinClosedAssertValue)
+	if a {
+		reply = "Closed" //asserted
 	}
 
 	return reply, a, nil

@@ -1,5 +1,7 @@
 cloud.google.com/go v0.34.0 h1:eOI3/cP2VTU6uZLDYAoic+eyzzB9YyGmJ7eIjl8rOPg=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+github.com/djerman3/pimonitor v0.0.0-20200505211443-2998b21c3d21 h1:4me4I1t1hojWkcCLmeR+TH8BKp6dBvHaS3h2jYjIXb8=
+github.com/djerman3/pimonitor v0.0.0-20200505211443-2998b21c3d21/go.mod h1:FYXwJeAGIUst+gcbRSjBy4JQXkgAc1HU0vl70VTLtQQ=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=

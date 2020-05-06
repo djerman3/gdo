@@ -64,11 +64,13 @@ type GoogleUserProfile struct {
 	Picture  string `json:"picture"`
 }
 
+// OauthLogin type for oauth handler
 type OauthLogin struct {
 	Cookie      http.Cookie
 	NextHandler http.Handler
 }
 
+// NewLoginHandler generates a login middleware
 func NewLoginHandler(next http.Handler) OauthLogin {
 	h := OauthLogin{
 		Cookie: http.Cookie{
@@ -82,6 +84,8 @@ func NewLoginHandler(next http.Handler) OauthLogin {
 	}
 	return h
 }
+
+// NewLogoutHandler generates a login middleware
 func NewLogoutHandler(next http.Handler) OauthLogin {
 	h := OauthLogin{
 		Cookie: http.Cookie{
@@ -96,7 +100,7 @@ func NewLogoutHandler(next http.Handler) OauthLogin {
 	return h
 }
 
-//Make OauthLogin a http.Handler
+//ServeHTTP makes OauthLogin a http.Handler
 func (l OauthLogin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("access_token")
 	if err != nil {
@@ -163,7 +167,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	oauthLogout(w, r)
 }
 
-const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
+const oauthGoogleAPIcall = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 func oauthLogout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("access_token")
@@ -188,7 +192,7 @@ func getUserDataFromGoogle(code string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
 	}
-	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
+	response, err := http.Get(oauthGoogleAPIcall + token.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
 	}

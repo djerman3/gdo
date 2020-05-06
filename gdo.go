@@ -52,9 +52,10 @@ type AccessEntry struct {
 
 // DoorCfg configures the door parameters
 type DoorCfg struct {
-	ClosedPin   int `yaml:"closedPin"`
-	ClosedValue int `yaml:"closedValue"`
-	ClickRelay  int `yaml:"clickRelay"`
+	ClosedPin        int    `yaml:"closedPin"`
+	ClosedValue      bool   `yaml:"closedValue"`
+	ClickRelay       int    `yaml:"clickRelay"`
+	PiMonitorAddress string `yaml:"pimonitoraddress"`
 }
 
 var cfg *Config

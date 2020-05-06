@@ -155,7 +155,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	//get content data
-	state, asserted, err := door.readPin()
+	state, asserted, err := door.ReadPin()
 	if err != nil {
 		log.Printf("Failed to get pi %v\n", err)
 		http.Error(w, "Error fetching states!", http.StatusInternalServerError)
