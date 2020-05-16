@@ -1,5 +1,6 @@
 // Package gdo provides the garage door webserver
-// this file organizes the server side authentication part
+// this file organizes the server oauth2 authentication wrapper
+// and the gdo authorization module
 package gdo
 
 import (
@@ -13,6 +14,15 @@ import (
 	"net/http"
 	"time"
 )
+
+// Authorizations need to be indicated for users to see firewall, door and other sections
+
+// Sessions track valid tokens
+type ActiveSession struct {
+	Id      string
+	Token   string
+	Expires time.Time
+}
 
 // RandomString produces a base64 string (websafe?) from n random bytes
 func RandomString(n int) string {

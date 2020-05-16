@@ -19,3 +19,5 @@ gdapi/lftp_transcript_redacted.txt
 etc/gdapi.conf.json
 etc/gdapi.conf.yaml
 etc/gdo.conf
+cjmac.txt
+sjmac.txt
